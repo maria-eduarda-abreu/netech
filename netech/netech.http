@@ -1,0 +1,6 @@
+@netech_HostAddress = http://localhost:5217
+
+GET {{netech_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
