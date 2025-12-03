@@ -35,15 +35,15 @@ namespace netech.Infrastructure.Repositories
             return await _context.CarbonFactors.FirstOrDefaultAsync(f => f.IsBaseline);
         }
 
-        // Implementação da Paginação via Cursor (Keyset)
+        // --- A Lógica Complexa de Keyset Pagination ---
         public async Task<List<Trip>> GetTripsByUserAsync(Guid userId, int pageSize, DateTimeOffset? lastDate, Guid? lastId)
         {
             var query = _context.Trips
-                .AsNoTracking() // Performance: não precisamos rastrear mudanças apenas para leitura
+                .AsNoTracking() // Otimização: Leitura rápida sem tracking
                 .Where(t => t.UserId == userId);
 
-            // Se o cliente enviou o cursor (última data e último ID que viu),
-            // buscamos apenas os registros MAIS ANTIGOS que aquele ponto.
+            // Se temos um cursor (lastDate/lastId), filtramos apenas o que é mais antigo que ele.
+            // Isso evita o "OFFSET" lento do SQL.
             if (lastDate.HasValue && lastId.HasValue)
             {
                 query = query.Where(t =>
@@ -52,8 +52,8 @@ namespace netech.Infrastructure.Repositories
             }
 
             return await query
-                .OrderByDescending(t => t.StartDateTime) // Do mais recente para o antigo
-                .ThenByDescending(t => t.Id)           // Desempate determinístico
+                .OrderByDescending(t => t.StartDateTime) // Ordenação obrigatória para o cursor funcionar
+                .ThenByDescending(t => t.Id)           // Desempate obrigatório
                 .Take(pageSize)
                 .ToListAsync();
         }

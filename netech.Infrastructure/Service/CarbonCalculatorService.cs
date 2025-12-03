@@ -12,17 +12,16 @@ namespace netech.Infrastructure.Services
     {
         public decimal CalculateSavings(decimal distanceMeters, CarbonFactor transportMode, CarbonFactor baselineMode)
         {
-            // Converte metros para km
+            // Converter metros para km, pois os fatores estão em g/km
             decimal distanceKm = distanceMeters / 1000m;
 
             // Fórmula: (FatorBase - FatorModal) * Distância
-            // Se o modal for mais poluente que a base (ex: Jato Privado), o resultado será negativo.
+            // Ex: (271g - 9g) * 10km = 2620g de economia.
             decimal savingsPerKm = baselineMode.EmissionPerKm - transportMode.EmissionPerKm;
 
             decimal totalSavings = savingsPerKm * distanceKm;
 
-            // Regra de Negócio: Não permitimos "poupança negativa" (gerar poluição não dá pontos)
-            // A menos que o requisito mude para penalizar o usuário.
+            // Regra de Negócio: Não retornamos economia negativa.
             return totalSavings > 0 ? totalSavings : 0;
         }
     }
